@@ -1,0 +1,6 @@
+{
+  "name": "Start Instances",
+  "id": "start-instances",
+  "version": "${version}",
+  "initializer": "com.marie.startinstances.StartInstancesPlugin"
+}
