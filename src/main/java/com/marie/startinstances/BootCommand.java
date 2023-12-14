@@ -29,8 +29,6 @@ public class BootCommand extends Command {
 
     @Override
     public void run(String[] args, CancelRequester cancelRequester) {
-
-
-        BenchmarkResetManager.getBenchmarkResetManager().startBenchmark();
+        new StartInstancesPlugin().onMenuButtonPress();
     }
 }
