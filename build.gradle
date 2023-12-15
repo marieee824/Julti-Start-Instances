@@ -9,6 +9,7 @@ repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
     maven { url "https://www.jetbrains.com/intellij-repository/releases" }
+    gradlePluginPortal()
 }
 
 dependencies {

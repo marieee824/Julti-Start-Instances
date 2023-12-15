@@ -1,7 +1,5 @@
 package com.marie.startinstances;
 
-import xyz.duncanruns.julti.Julti;
-import xyz.duncanruns.julti.benchmarkplugin.BenchmarkResetManager;
 import xyz.duncanruns.julti.cancelrequester.CancelRequester;
 import xyz.duncanruns.julti.command.Command;
 

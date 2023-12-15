@@ -23,6 +23,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 public class StartInstancesPlugin implements PluginInitializer {
+    private static ArrayList<MinecraftInstance> instancesWaiting = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
         JultiAppLaunch.launchWithDevPlugin(args, PluginManager.JultiPluginData.fromString(
@@ -34,36 +35,41 @@ public class StartInstancesPlugin implements PluginInitializer {
     public void initialize() {
         CommandManager.getMainManager().registerCommand(new BootCommand());
         PluginEvents.RunnableEventType.ALL_INSTANCES_FOUND.register(StartInstancesPlugin::instancesFound);
-        PluginEvents.InstanceEventType.STATE_CHANGE.register(m -> stateChange());
+        PluginEvents.InstanceEventType.STATE_CHANGE.register(instance -> {
+            Julti.log(Level.DEBUG, "event " + instance.getNameSortingNum());
+            try {
+                stateChange(instance);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private static void instancesFound() {
         for (MinecraftInstance instance : InstanceManager.getInstanceManager().getInstances()) {
             instance.reset();
+            instancesWaiting.add(instance);
         }
     }
 
-    private static void stateChange() {
-        ArrayList<MinecraftInstance> instancesWaiting = new ArrayList<>(InstanceManager.getInstanceManager().getInstances());
-        while (instancesWaiting.size() > 0) {
-            for (MinecraftInstance instance : InstanceManager.getInstanceManager().getInstances()) {
-                Julti.log(Level.DEBUG, "hi");
-                StateTracker tracker = instance.getStateTracker();
-                if (tracker.isCurrentState(InstanceState.INWORLD)) {
-                    Julti.log(Level.DEBUG, "if");
-                    Julti.getJulti().activateInstance(instance);
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    instance.reset();
-                    Julti.getJulti().focusWall();
-                    instancesWaiting.remove(instance);
-                }
+    private void stateChange(MinecraftInstance instance) throws InterruptedException {
+        if (!instancesWaiting.isEmpty()) {
+            StateTracker tracker = instance.getStateTracker();
+            Julti.log(Level.DEBUG, tracker.getInstanceState().toString());
+            if (tracker.isCurrentState(InstanceState.INWORLD)) {
+                Julti.log(Level.DEBUG, "if");
+                Julti.getJulti().activateInstance(instance);
+                Thread.sleep(10000);
+                instance.ensureNotFullscreen();
+                instance.reset();
+                Julti.getJulti().focusWall();
+                instancesWaiting.remove(instance);
+                Julti.log(Level.DEBUG, String.valueOf(instancesWaiting.size()));
             }
+        if (instancesWaiting.isEmpty()) {
+            BenchmarkResetManager.getBenchmarkResetManager().startBenchmark();
         }
-        BenchmarkResetManager.getBenchmarkResetManager().startBenchmark();
+        }
     }
 
     @Override
